@@ -1,0 +1,53 @@
+{
+  "info": {
+    "name": "Proyecto Students API",
+    "_postman_id": "b1d2f9e0-1111-4a55-aaaa-123456789abc",
+    "description": "Colección de ejemplos para CRUD de estudiantes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Crear estudiante",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Ana\",\n  \"lastName\": \"Gomez\",\n  \"email\": \"ana@example.com\",\n  \"dateOfBirth\": \"2003-05-12\",\n  \"program\": \"Ingeniería de Sistemas\",\n  \"documentNumber\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/students",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "students"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Listar estudiantes",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/students"
+      }
+    },
+    {
+      "name": "Certificado PDF",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8080/api/students/1/certificate"
+      }
+    }
+  ]
+}
+

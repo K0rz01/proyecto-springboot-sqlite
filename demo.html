@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - API Gestión de Estudiantes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .endpoint {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .method {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: white;
+        }
+        .method.get { background: #28a745; }
+        .method.post { background: #007bff; }
+        .method.put { background: #ffc107; color: #000; }
+        .method.delete { background: #dc3545; }
+        .url {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 0.9em;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 10px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .response pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.85em;
+        }
+        .response.success {
+            border-left: 4px solid #28a745;
+        }
+        .response.error {
+            border-left: 4px solid #dc3545;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 API Gestión de Estudiantes</h1>
+        <p class="subtitle">Demostración Interactiva - Spring Boot REST API</p>
+        
+        <div id="status" class="status offline">
+            ⚠️ Verificando conexión con el servidor...
+        </div>
+
+        <!-- GET ALL -->
+        <div class="section">
+            <h2>1. Listar Todos los Estudiantes</h2>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/students</span>
+                </div>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                    Obtiene todos los estudiantes ordenados por apellido (Stream API)
+                </p>
+                <button onclick="listarEstudiantes()">Listar Estudiantes</button>
+                <div id="response-list" class="response" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- GET BY ID -->
+        <div class="section">
+            <h2>2. Buscar Estudiante por ID</h2>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/students/{id}</span>
+                </div>
+                <div class="input-group">
+                    <label>ID del Estudiante:</label>
+                    <input type="number" id="student-id" value="1" min="1">
+                </div>
+                <button onclick="buscarEstudiante()">Buscar Estudiante</button>
+                <div id="response-get" class="response" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- CREATE -->
+        <div class="section">
+            <h2>3. Crear Nuevo Estudiante</h2>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="url">/api/students</span>
+                </div>
+                <div class="input-group">
+                    <label>Nombre:</label>
+                    <input type="text" id="create-firstName" value="Juan">
+                </div>
+                <div class="input-group">
+                    <label>Apellido:</label>
+                    <input type="text" id="create-lastName" value="Perez">
+                </div>
+                <div class="input-group">
+                    <label>Email:</label>
+                    <input type="email" id="create-email" value="juan.perez@universidad.edu">
+                </div>
+                <div class="input-group">
+                    <label>Fecha Nacimiento (yyyy-MM-dd):</label>
+                    <input type="text" id="create-dateOfBirth" value="2003-06-15">
+                </div>
+                <div class="input-group">
+                    <label>Programa:</label>
+                    <input type="text" id="create-program" value="Ingenieria de Software">
+                </div>
+                <div class="input-group">
+                    <label>Número de Documento:</label>
+                    <input type="text" id="create-documentNumber" value="1122334455">
+                </div>
+                <button onclick="crearEstudiante()">Crear Estudiante</button>
+                <div id="response-create" class="response" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- UPDATE -->
+        <div class="section">
+            <h2>4. Actualizar Estudiante</h2>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="url">/api/students/{id}</span>
+                </div>
+                <div class="input-group">
+                    <label>ID del Estudiante:</label>
+                    <input type="number" id="update-id" value="1" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Nombre:</label>
+                    <input type="text" id="update-firstName" value="Ana Maria">
+                </div>
+                <div class="input-group">
+                    <label>Apellido:</label>
+                    <input type="text" id="update-lastName" value="Gomez">
+                </div>
+                <div class="input-group">
+                    <label>Email:</label>
+                    <input type="email" id="update-email" value="ana.gomez@universidad.edu">
+                </div>
+                <div class="input-group">
+                    <label>Fecha Nacimiento:</label>
+                    <input type="text" id="update-dateOfBirth" value="2003-05-12">
+                </div>
+                <div class="input-group">
+                    <label>Programa:</label>
+                    <input type="text" id="update-program" value="Ingenieria de Sistemas">
+                </div>
+                <div class="input-group">
+                    <label>Número de Documento:</label>
+                    <input type="text" id="update-documentNumber" value="1234567890">
+                </div>
+                <button onclick="actualizarEstudiante()">Actualizar Estudiante</button>
+                <div id="response-update" class="response" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- DELETE -->
+        <div class="section">
+            <h2>5. Eliminar Estudiante</h2>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="url">/api/students/{id}</span>
+                </div>
+                <div class="input-group">
+                    <label>ID del Estudiante a Eliminar:</label>
+                    <input type="number" id="delete-id" value="1" min="1">
+                </div>
+                <button onclick="eliminarEstudiante()" style="background: #dc3545;">Eliminar Estudiante</button>
+                <div id="response-delete" class="response" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- CERTIFICATE -->
+        <div class="section">
+            <h2>6. Generar Certificado PDF</h2>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="url">/api/students/{id}/certificate</span>
+                </div>
+                <div class="input-group">
+                    <label>ID del Estudiante:</label>
+                    <input type="number" id="cert-id" value="1" min="1">
+                </div>
+                <button onclick="generarCertificado()">Generar Certificado PDF</button>
+                <div id="response-cert" class="response" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- VALIDATIONS -->
+        <div class="section">
+            <h2>7. Probar Validaciones</h2>
+            <div class="endpoint">
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                    Prueba las validaciones del sistema
+                </p>
+                <button onclick="probarEmailInvalido()" style="background: #ffc107; color: #000;">
+                    Probar Email Inválido
+                </button>
+                <button onclick="probarCamposVacios()" style="background: #ffc107; color: #000;">
+                    Probar Campos Vacíos
+                </button>
+                <div id="response-validation" class="response" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/students';
+
+        // Verificar conexión al cargar
+        window.onload = function() {
+            verificarConexion();
+            setInterval(verificarConexion, 30000); // Verificar cada 30 segundos
+        };
+
+        function verificarConexion() {
+            fetch(API_BASE, {
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    const statusDiv = document.getElementById('status');
+                    if (response.ok) {
+                        statusDiv.className = 'status online';
+                        statusDiv.textContent = '✅ Servidor conectado - API funcionando correctamente';
+                    } else {
+                        statusDiv.className = 'status offline';
+                        statusDiv.textContent = `⚠️ Servidor respondió con error: ${response.status} ${response.statusText}`;
+                    }
+                })
+                .catch(error => {
+                    const statusDiv = document.getElementById('status');
+                    statusDiv.className = 'status offline';
+                    let errorMsg = '❌ No se puede conectar al servidor. ';
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        errorMsg += 'Asegúrate de que la aplicación esté corriendo en http://localhost:8080';
+                    } else if (error.message.includes('CORS')) {
+                        errorMsg += 'Error de CORS. Verifica la configuración del servidor.';
+                    } else {
+                        errorMsg += `Error: ${error.message}`;
+                    }
+                    statusDiv.textContent = errorMsg;
+                    console.error('Error de conexión:', error);
+                });
+        }
+
+        function mostrarRespuesta(elementId, data, isError = false) {
+            const div = document.getElementById(elementId);
+            div.style.display = 'block';
+            div.className = `response ${isError ? 'error' : 'success'}`;
+            div.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        function listarEstudiantes() {
+            fetch(API_BASE)
+                .then(response => response.json())
+                .then(data => {
+                    mostrarRespuesta('response-list', {
+                        total: data.length,
+                        estudiantes: data
+                    });
+                })
+                .catch(error => {
+                    mostrarRespuesta('response-list', { error: error.message }, true);
+                });
+        }
+
+        function buscarEstudiante() {
+            const id = document.getElementById('student-id').value;
+            fetch(`${API_BASE}/${id}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                })
+                .then(data => {
+                    mostrarRespuesta('response-get', data);
+                })
+                .catch(error => {
+                    mostrarRespuesta('response-get', error, true);
+                });
+        }
+
+        function crearEstudiante() {
+            const data = {
+                firstName: document.getElementById('create-firstName').value,
+                lastName: document.getElementById('create-lastName').value,
+                email: document.getElementById('create-email').value,
+                dateOfBirth: document.getElementById('create-dateOfBirth').value,
+                program: document.getElementById('create-program').value,
+                documentNumber: document.getElementById('create-documentNumber').value
+            };
+
+            fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(err => Promise.reject(err));
+                }
+            })
+            .then(data => {
+                mostrarRespuesta('response-create', data);
+                listarEstudiantes(); // Actualizar lista
+            })
+            .catch(error => {
+                mostrarRespuesta('response-create', error, true);
+            });
+        }
+
+        function actualizarEstudiante() {
+            const id = document.getElementById('update-id').value;
+            const data = {
+                firstName: document.getElementById('update-firstName').value,
+                lastName: document.getElementById('update-lastName').value,
+                email: document.getElementById('update-email').value,
+                dateOfBirth: document.getElementById('update-dateOfBirth').value,
+                program: document.getElementById('update-program').value,
+                documentNumber: document.getElementById('update-documentNumber').value
+            };
+
+            fetch(`${API_BASE}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(err => Promise.reject(err));
+                }
+            })
+            .then(data => {
+                mostrarRespuesta('response-update', data);
+            })
+            .catch(error => {
+                mostrarRespuesta('response-update', error, true);
+            });
+        }
+
+        function eliminarEstudiante() {
+            const id = document.getElementById('delete-id').value;
+            if (!confirm(`¿Estás seguro de eliminar el estudiante con ID ${id}?`)) {
+                return;
+            }
+
+            fetch(`${API_BASE}/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok || response.status === 204) {
+                    mostrarRespuesta('response-delete', {
+                        message: 'Estudiante eliminado exitosamente',
+                        status: 204
+                    });
+                    listarEstudiantes(); // Actualizar lista
+                } else {
+                    return response.json().then(err => Promise.reject(err));
+                }
+            })
+            .catch(error => {
+                mostrarRespuesta('response-delete', error, true);
+            });
+        }
+
+        function generarCertificado() {
+            const id = document.getElementById('cert-id').value;
+            fetch(`${API_BASE}/${id}/certificate`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    return response.json().then(err => Promise.reject(err));
+                }
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `certificado-estudiante-${id}.pdf`;
+                a.click();
+                mostrarRespuesta('response-cert', {
+                    message: 'Certificado PDF generado y descargado exitosamente',
+                    filename: `certificado-estudiante-${id}.pdf`
+                });
+            })
+            .catch(error => {
+                mostrarRespuesta('response-cert', error, true);
+            });
+        }
+
+        function probarEmailInvalido() {
+            const data = {
+                firstName: "Test",
+                lastName: "User",
+                email: "email-sin-arroba",
+                dateOfBirth: "2003-01-01",
+                program: "Test",
+                documentNumber: "123"
+            };
+
+            fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                mostrarRespuesta('response-validation', {
+                    prueba: 'Email inválido',
+                    resultado: 'Validación funcionando',
+                    error: data
+                }, true);
+            })
+            .catch(error => {
+                mostrarRespuesta('response-validation', error, true);
+            });
+        }
+
+        function probarCamposVacios() {
+            const data = {
+                firstName: "",
+                lastName: "Test",
+                email: "test@email.com",
+                dateOfBirth: "2003-01-01",
+                program: "Test",
+                documentNumber: "123"
+            };
+
+            fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                mostrarRespuesta('response-validation', {
+                    prueba: 'Campos vacíos',
+                    resultado: 'Validación funcionando',
+                    error: data
+                }, true);
+            })
+            .catch(error => {
+                mostrarRespuesta('response-validation', error, true);
+            });
+        }
+    </script>
+</body>
+</html>
+

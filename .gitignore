@@ -1,0 +1,12 @@
+.idea/
+target/
+*.iml
+*.sqlite
+*.db
+*.log
+.DS_Store
+/docs/*.puml
+*.bat
+/.mvn/
+!.gitignore
+
